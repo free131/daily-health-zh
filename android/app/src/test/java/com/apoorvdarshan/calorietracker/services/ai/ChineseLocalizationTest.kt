@@ -17,11 +17,11 @@ class ChineseLocalizationTest {
         assertEquals("个", ServingUnitOption("个", 100.0).displayUnit(2.0))
     }
     @Test fun aiKeepsSchemaButUsesChineseForVisibleText() = inLocale(Locale.SIMPLIFIED_CHINESE) {
-        assertTrue(ResponseLanguage.instruction().contains("Simplified Chinese"))
-        assertTrue(ResponseLanguage.instruction().contains("Keep JSON keys"))
+        assertTrue(ResponseLanguage.instruction().contains("简体中文"))
+        assertTrue(ResponseLanguage.instruction().contains("JSON 键"))
     }
     @Test fun englishLocaleStillUsesEnglishUnits() = inLocale(Locale.US) {
         assertEquals("pieces", ServingUnitOption("piece", 100.0).displayUnit(2.0))
-        assertEquals("", ResponseLanguage.instruction())
+        assertTrue(ResponseLanguage.instruction().contains("简体中文"))
     }
 }

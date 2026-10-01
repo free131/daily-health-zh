@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.ui.util.formattedWholeNumber
+import com.apoorvdarshan.calorietracker.models.FoodLogMethod
 import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -107,7 +108,8 @@ internal fun DailyNutritionCard(ui: HomeUiState, compact: Boolean, onDetails: ()
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun DailyRecordActions(onCamera: () -> Unit, onDescription: () -> Unit, onManual: () -> Unit, onMore: () -> Unit) {
+internal fun DailyRecordActions(onCamera: () -> Unit, onDescription: () -> Unit, onManual: () -> Unit, onReuse: (FoodLogMethod) -> Unit) {
+    var reuseExpanded by remember { mutableStateOf(false) }
     val actionWidth = (136 * LocalConfiguration.current.fontScale).dp
     Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -130,7 +132,18 @@ internal fun DailyRecordActions(onCamera: () -> Unit, onDescription: () -> Unit,
             }
             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onManual) { Text(stringResource(R.string.daily_manual)) }
-                TextButton(onClick = onMore) { Text(stringResource(R.string.daily_more)) }
+                // The popup anchor must move with this button inside the scrolling diary.
+                Box {
+                    TextButton(onClick = { reuseExpanded = true }) { Text(stringResource(R.string.home_menu_reuse_meal)) }
+                    SheetGlassDropdownMenu(expanded = reuseExpanded, onDismissRequest = { reuseExpanded = false }, menuWidth = 238.dp) {
+                        listOf(FoodLogMethod.RECENT, FoodLogMethod.FREQUENT, FoodLogMethod.FAVORITES, FoodLogMethod.COPY_FROM_DAY).forEach { method ->
+                            SheetGlassDropdownMenuItem(label = stringResource(method.titleRes), leadingIcon = method.icon) {
+                                reuseExpanded = false
+                                onReuse(method)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

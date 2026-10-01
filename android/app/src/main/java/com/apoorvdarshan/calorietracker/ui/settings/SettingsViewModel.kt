@@ -42,6 +42,7 @@ data class SettingsUiState(
     val selectedTextAI: AIProvider = AIProvider.GEMINI,
     val selectedTextModel: String = AIProvider.GEMINI.defaultTextModel,
     val textApiKeyMasked: String = "",
+    val thinkingModeEnabled: Boolean = false,
     val openRouterReasoningEffort: OpenRouterReasoningEffort = OpenRouterReasoningEffort.AUTO,
     val maxResponseTokens: Int = 1024,
     val aiRequestTimeoutSeconds: Int = AIProvider.DEFAULT_REQUEST_TIMEOUT_SECONDS,
@@ -270,6 +271,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 selectedTextModel = textModel,
                 textApiKeyMasked = textMasked,
                 maxResponseTokens = maxTokens,
+                thinkingModeEnabled = container.prefs.thinkingModeEnabled.first(),
                 openRouterReasoningEffort = openRouterReasoningEffort,
                 aiRequestTimeoutSeconds = requestTimeoutSeconds,
                 selectedSpeech = speech,
@@ -409,6 +411,13 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.prefs.setUserContext(value)
             _ui.value = _ui.value.copy(userContext = value.trim())
+        }
+    }
+
+    fun setThinkingModeEnabled(value: Boolean) {
+        viewModelScope.launch {
+            container.prefs.setThinkingModeEnabled(value)
+            _ui.value = _ui.value.copy(thinkingModeEnabled = value)
         }
     }
 

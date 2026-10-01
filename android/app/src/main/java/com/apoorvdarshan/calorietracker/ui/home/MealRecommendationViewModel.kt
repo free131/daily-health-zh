@@ -63,7 +63,7 @@ class MealRecommendationViewModel(private val container: AppContainer) : ViewMod
                     history = emptyList(), newUserMessage = context.toString(), profile = profile,
                     weights = emptyList(), bodyFats = emptyList(), foods = emptyList(),
                     heightMetric = true, weightMetric = true, systemPromptOverride = MealRecommendations.instruction,
-                    responseTokenBudget = 3072
+                    responseTokenBudget = 3072, allowDataTools = false
                 )
                 ensureActive()
                 val result = try { MealRecommendations.parse(reply, wholeDay) }

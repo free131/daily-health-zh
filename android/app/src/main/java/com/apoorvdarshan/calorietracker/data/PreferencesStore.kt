@@ -66,7 +66,8 @@ data class FoodAiCallSettings(
     val baseUrl: String,
     val maxTokens: Int,
     val requestTimeoutSeconds: Int,
-    val openRouterReasoningEffort: OpenRouterReasoningEffort
+    val openRouterReasoningEffort: OpenRouterReasoningEffort,
+    val thinkingModeEnabled: Boolean = false
 )
 
 internal fun executableAIProviderOrDefault(
@@ -952,6 +953,9 @@ class PreferencesStore(
 
     /** AI output-token cap sent with every request. Default 1024; raise it for local
      *  models whose replies get truncated. */
+    val thinkingModeEnabled: Flow<Boolean> = ds.data.map { it[Keys.THINKING_MODE_ENABLED] ?: false }
+    suspend fun setThinkingModeEnabled(value: Boolean) { ds.edit { it[Keys.THINKING_MODE_ENABLED] = value } }
+
     val openRouterReasoningEffort: Flow<OpenRouterReasoningEffort> = ds.data.map {
         OpenRouterReasoningEffort.fromValue(it[Keys.OPENROUTER_REASONING_EFFORT])
     }
@@ -1011,6 +1015,7 @@ class PreferencesStore(
         val custom = prefs[stringPreferencesKey(CUSTOM_BASE_URL_PREFIX + primary.name)]
             ?.takeIf { it.isNotEmpty() }
         return FoodAiCallSettings(
+            thinkingModeEnabled = prefs[Keys.THINKING_MODE_ENABLED] ?: false,
             userContext = prefs[Keys.USER_CONTEXT].orEmpty(),
             provider = primary,
             model = model,
@@ -1478,6 +1483,7 @@ class PreferencesStore(
         val SELECTED_TEXT_AI_MODEL = stringPreferencesKey("selectedTextAIModel")
         val GEMINI_MODEL_MIGRATION_VERSION = intPreferencesKey("geminiModelMigrationVersion")
         val AI_MODEL_REGISTRY_MIGRATION_VERSION = intPreferencesKey("aiModelRegistryMigrationVersion")
+        val THINKING_MODE_ENABLED = booleanPreferencesKey("thinkingModeEnabled")
         val OPENROUTER_REASONING_EFFORT = stringPreferencesKey("openRouterReasoningEffort")
         val MAX_RESPONSE_TOKENS = intPreferencesKey("maxResponseTokens")
         val AI_REQUEST_TIMEOUT_SECONDS = intPreferencesKey("aiRequestTimeoutSeconds")

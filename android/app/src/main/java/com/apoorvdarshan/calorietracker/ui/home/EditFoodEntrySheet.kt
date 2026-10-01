@@ -163,7 +163,7 @@ fun EditFoodEntrySheet(
     val scale = if (baseServing > 0) servingGrams / baseServing else 1.0
     var mealType by remember(entry) { mutableStateOf(currentBaseEntry.mealType) }
     var moreNutritionExpanded by remember { mutableStateOf(false) }
-    var mealMenuExpanded by remember { mutableStateOf(false) }
+
     var servingMenuExpanded by remember { mutableStateOf(false) }
     val zone = remember { ZoneId.systemDefault() }
     val initialLoggedAt = remember(entry.id, entry.timestamp) { entry.timestamp.atZone(zone) }
@@ -620,54 +620,7 @@ fun EditFoodEntrySheet(
 
             item { SheetSectionHeader(stringResource(R.string.sheet_meal)) }
             item {
-                SheetPillRow(onClick = { mealMenuExpanded = true }) {
-                    Text(stringResource(R.string.sheet_meal_type), fontSize = 17.sp, modifier = Modifier.weight(1f))
-                    // Wrap only the right cluster in a Box so the DropdownMenu
-                    // anchors on the right side of the row (under the value),
-                    // not at the row's left edge.
-                    Box {
-                        androidx.compose.foundation.layout.Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                sheetMealIcon(mealType),
-                                contentDescription = null,
-                                tint = AppColors.Calorie,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                stringResource(mealType.displayNameRes),
-                                fontSize = 17.sp,
-                                color = AppColors.Calorie,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Icon(
-                                Icons.Filled.UnfoldMore,
-                                contentDescription = null,
-                                tint = AppColors.Calorie
-                            )
-                        }
-                        SheetGlassDropdownMenu(
-                            expanded = mealMenuExpanded,
-                            onDismissRequest = { mealMenuExpanded = false },
-                            menuWidth = 184.dp
-                        ) {
-                            for (m in MealType.values()) {
-                                SheetGlassDropdownMenuItem(
-                                    label = stringResource(m.displayNameRes),
-                                    leadingIcon = sheetMealIcon(m),
-                                    selected = m == mealType,
-                                    onClick = {
-                                        mealType = m
-                                        mealMenuExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
+                MealTypeSelector(selected = mealType, onSelect = { mealType = it })
             }
 
             item { SheetSectionHeader(stringResource(R.string.edit_reprocess_section)) }

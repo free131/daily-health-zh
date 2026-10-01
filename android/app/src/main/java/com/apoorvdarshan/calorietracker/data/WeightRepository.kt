@@ -72,11 +72,15 @@ class WeightRepository(
         val entry = WeightEntry(weightKg = kg, date = date)
         val fat = fraction?.let { com.apoorvdarshan.calorietracker.models.BodyFatEntry(bodyFatFraction = it, date = date) }
         val previous = prefs.addBodyMetrics(entry, fat)
-        // Optional platform integration must not turn a successful local commit into a retry.
+        // Each permission and write is independent; the local atomic commit above is authoritative.
         try {
-            if (shouldSyncHealth()) {
-                health?.writeWeight(entry)
-                if (fat != null) health?.writeBodyFat(fat)
+            if (prefs.healthConnectEnabled.first() && health != null) {
+                syncBodyMetricsIndependently(
+                    canWriteWeight = { health.hasWeightWrite() },
+                    writeWeight = { health.writeWeight(entry) },
+                    canWriteBodyFat = { fat != null && health.hasBodyFatWrite() },
+                    writeBodyFat = { if (fat != null) health.writeBodyFat(fat) }
+                )
             }
         } catch (e: kotlinx.coroutines.CancellationException) { throw e }
           catch (_: Exception) { /* Local records remain authoritative. */ }

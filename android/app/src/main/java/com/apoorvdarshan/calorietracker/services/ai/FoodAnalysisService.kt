@@ -539,7 +539,7 @@ class FoodAnalysisService(
                 settings.maxTokens,
                 settings.requestTimeoutSeconds,
                 jsonResponse,
-                settings.openRouterReasoningEffort
+                settings.openRouterReasoningEffort, settings.thinkingModeEnabled
             )
         } catch (primaryError: Throwable) {
             if (primaryError is kotlinx.coroutines.CancellationException) throw primaryError
@@ -559,7 +559,7 @@ class FoodAnalysisService(
                     settings.maxTokens,
                     settings.requestTimeoutSeconds,
                     jsonResponse,
-                    settings.openRouterReasoningEffort
+                    settings.openRouterReasoningEffort, settings.thinkingModeEnabled
                 )
             } catch (fallbackError: Throwable) {
                 if (fallbackError is kotlinx.coroutines.CancellationException) throw fallbackError
@@ -650,7 +650,8 @@ class FoodAnalysisService(
         maxTokens: Int,
         requestTimeoutSeconds: Int,
         jsonResponse: Boolean,
-        openRouterReasoningEffort: OpenRouterReasoningEffort = OpenRouterReasoningEffort.AUTO
+        openRouterReasoningEffort: OpenRouterReasoningEffort = OpenRouterReasoningEffort.AUTO,
+        thinkingModeEnabled: Boolean = false
     ): String {
         if (provider == AIProvider.LOCAL_GEMMA) {
             return localGemma?.generate(
@@ -661,7 +662,7 @@ class FoodAnalysisService(
         }
         if (baseUrl.isEmpty()) throw AiError.InvalidUrl(baseUrl)
         if (provider.requiresApiKey && apiKey.isNullOrEmpty()) throw AiError.NoApiKey
-        val requestClient = clientForProvider(okHttp, provider, requestTimeoutSeconds)
+        val requestClient = ThinkingMode.client(clientForProvider(okHttp, provider, requestTimeoutSeconds), provider, model, thinkingModeEnabled)
         return when (provider.apiFormat) {
             AIProvider.ApiFormat.GEMINI ->
                 GeminiClient.analyze(

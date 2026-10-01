@@ -159,7 +159,7 @@ object GeminiClient {
         val shape = if (jsonResponse) {
             "Return only the requested compact JSON object, with no reasoning, explanation, or markdown."
         } else {
-            "Return only the requested concise plain-English answer, with no reasoning, explanation, JSON, or markdown."
+            "只返回所要求的简洁中文回答，不输出思考过程、额外解释、JSON 或 Markdown。"
         }
         return "$prompt\n\nIMPORTANT: The previous response was truncated. $shape$budget"
     }

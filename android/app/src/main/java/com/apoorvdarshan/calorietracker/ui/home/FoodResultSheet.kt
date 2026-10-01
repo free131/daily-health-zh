@@ -239,7 +239,7 @@ fun FoodResultSheet(
             }
         }
     }
-    var mealMenuExpanded by rememberSaveable { mutableStateOf(false) }
+
     var servingMenuExpanded by rememberSaveable { mutableStateOf(false) }
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val sheetSurface = if (isDark) MaterialTheme.colorScheme.surface else Color(0xFFFAF3EE)
@@ -766,53 +766,7 @@ fun FoodResultSheet(
 
             item { SheetSectionHeader(stringResource(R.string.sheet_meal)) }
             item {
-                SheetPillRow(onClick = { mealMenuExpanded = true }) {
-                    Text(stringResource(R.string.sheet_meal_type), fontSize = 17.sp, modifier = Modifier.weight(1f))
-                    // Anchor the DropdownMenu inside the right-side cluster so
-                    // it pops open under the value, not the row's left edge.
-                    Box {
-                        androidx.compose.foundation.layout.Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                sheetMealIcon(mealType),
-                                contentDescription = null,
-                                tint = AppColors.Calorie,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                stringResource(mealType.displayNameRes),
-                                fontSize = 17.sp,
-                                color = AppColors.Calorie,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Icon(
-                                Icons.Filled.UnfoldMore,
-                                contentDescription = null,
-                                tint = AppColors.Calorie
-                            )
-                        }
-                        SheetGlassDropdownMenu(
-                            expanded = mealMenuExpanded,
-                            onDismissRequest = { mealMenuExpanded = false },
-                            menuWidth = 184.dp
-                        ) {
-                            for (m in MealType.values()) {
-                                SheetGlassDropdownMenuItem(
-                                    label = stringResource(m.displayNameRes),
-                                    leadingIcon = sheetMealIcon(m),
-                                    selected = m == mealType,
-                                    onClick = {
-                                        mealType = m
-                                        mealMenuExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
+                MealTypeSelector(selected = mealType, onSelect = { mealType = it })
             }
 
             item { SheetSectionHeader(stringResource(R.string.section_date_time)) }

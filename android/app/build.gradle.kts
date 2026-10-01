@@ -44,8 +44,8 @@ android {
         applicationId = "com.apoorvdarshan.calorietracker.privatezh"
         minSdk = 26
         targetSdk = 36
-        versionCode = 45
-        versionName = "7.1.1-private-zh-r7"
+        versionCode = 50
+        versionName = "1.0.0"
         // Release uses localized @string/app_name; debug overrides to "Fud AI Debug".
         manifestPlaceholders["launcherAppName"] = "@string/app_name"
 

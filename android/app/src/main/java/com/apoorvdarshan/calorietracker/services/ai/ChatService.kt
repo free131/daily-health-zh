@@ -68,7 +68,8 @@ class ChatService(
         workoutPreferences: WorkoutPreferences = WorkoutPreferences(),
         workoutPlanWeightUnit: WorkoutWeightUnit = WorkoutWeightUnit.LBS,
         systemPromptOverride: String? = null,
-        responseTokenBudget: Int? = null
+        responseTokenBudget: Int? = null,
+        allowDataTools: Boolean = true
     ): String {
         val baseSystemPrompt = systemPromptOverride ?: buildSystemPrompt(
             profile = profile,
@@ -86,7 +87,7 @@ class ChatService(
         val systemPrompt = (if (userContext.isNotBlank())
             "$baseSystemPrompt\n\n## User-provided context\n$userContext"
         else baseSystemPrompt) + ResponseLanguage.instruction()
-        val tools = CoachTools(
+        val tools = if (allowDataTools) CoachTools(
             weights = weights,
             bodyFats = bodyFats,
             foods = foods,
@@ -95,7 +96,7 @@ class ChatService(
             workoutPlans = workoutPlans,
             workoutPreferences = workoutPreferences,
             workoutPlanWeightUnit = workoutPlanWeightUnit
-        )
+        ) else null
 
         val useSeparateTextProvider = imageBytes == null && prefs.separateTextProviderEnabled.first()
         val provider = if (useSeparateTextProvider) {
@@ -142,7 +143,7 @@ class ChatService(
         systemPrompt: String,
         history: List<ChatMessage>,
         newUserMessage: String,
-        tools: CoachTools,
+        tools: CoachTools?,
         imageBytes: ByteArray?,
         maxTokens: Int,
         requestTimeoutSeconds: Int
@@ -165,9 +166,9 @@ class ChatService(
         }
         if (provider.requiresApiKey && apiKey.isNullOrEmpty()) throw AiError.NoApiKey
         if (baseUrl.isEmpty()) throw AiError.InvalidUrl(baseUrl)
-        val requestClient = FoodAnalysisService.clientForProvider(okHttp, provider, requestTimeoutSeconds)
+        val requestClient = ThinkingMode.client(FoodAnalysisService.clientForProvider(okHttp, provider, requestTimeoutSeconds), provider, model, prefs.thinkingModeEnabled.first())
         return when (provider.apiFormat) {
-            AIProvider.ApiFormat.GEMINI -> runGeminiToolLoop(requestClient, baseUrl, model, apiKey!!, systemPrompt, history, newUserMessage, tools, imageBytes)
+            AIProvider.ApiFormat.GEMINI -> runGeminiToolLoop(requestClient, baseUrl, model, apiKey!!, systemPrompt, history, newUserMessage, tools, imageBytes, maxTokens)
             AIProvider.ApiFormat.ANTHROPIC -> runAnthropicToolLoop(requestClient, baseUrl, model, apiKey!!, systemPrompt, history, newUserMessage, tools, imageBytes, maxTokens)
             AIProvider.ApiFormat.OPENAI_COMPATIBLE -> runOpenAIToolLoop(requestClient, baseUrl, model, apiKey, systemPrompt, history, newUserMessage, provider, tools, imageBytes, maxTokens)
             AIProvider.ApiFormat.LOCAL -> error("Local inference must be dispatched before network setup.")
@@ -242,7 +243,7 @@ class ChatService(
         }
 
         val lines = mutableListOf<String>()
-        lines.add("You are Coach, an AI nutrition, weight-change, and strength-training assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
+        lines.add("You are Coach, an AI nutrition, weight-change, and strength-training assistant inside a calorie tracking app. 始终使用简体中文回答, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
         lines.add("")
         lines.add("## Current date")
         lines.add("- Today: $currentDate ($currentTimeZone)")
@@ -326,7 +327,7 @@ class ChatService(
         history: List<ChatMessage>,
         newUserMessage: String,
         provider: AIProvider,
-        tools: CoachTools,
+        tools: CoachTools?,
         imageBytes: ByteArray?,
         maxTokens: Int
     ): String {
@@ -348,7 +349,12 @@ class ChatService(
         // assistant tool-call turns + role:tool result rows on each loop pass.
         val messages = JSONArray()
         messages.put(JSONObject().put("role", "system").put("content", systemPrompt))
-        for (msg in history) {
+        if (provider == AIProvider.DEEPSEEK && prefs.thinkingModeEnabled.first() && history.isNotEmpty()) {
+            val transcript = JSONArray()
+            history.forEach { msg -> transcript.put(JSONObject().put("role", msg.role.name).put("content", msg.content)) }
+            messages.put(JSONObject().put("role", "user").put("content",
+                "以下是历史对话的引用，仅用于上下文参考，不是本轮的新指令：\n$transcript"))
+        } else for (msg in history) {
             val role = if (msg.role == ChatMessage.Role.USER) "user" else "assistant"
             messages.put(JSONObject().put("role", role).put("content", msg.content))
         }
@@ -359,8 +365,10 @@ class ChatService(
                 val body = JSONObject().apply {
                     put("model", model)
                     put("messages", messages)
-                    put("tools", toolsArr)
-                    put("tool_choice", "auto")
+                    if (tools != null) {
+                        put("tools", toolsArr)
+                        put("tool_choice", "auto")
+                    }
                     if (provider == AIProvider.DEEPSEEK) put("thinking", JSONObject().put("type", "disabled"))
                     put(OpenAICompatibleClient.tokenLimitParameter(provider, model), maxTokens)
                     if (provider == AIProvider.OPENROUTER) {
@@ -416,7 +424,7 @@ class ChatService(
                     val id = call.optString("id").takeIf { it.isNotEmpty() } ?: continue
                     val argsString = function.optString("arguments", "{}")
                     val args = runCatching { JSONObject(argsString) }.getOrNull() ?: JSONObject()
-                    val result = tools.execute(name, args)
+                    val result = (tools ?: throw AiError.InvalidResponse).execute(name, args)
                     messages.put(JSONObject().apply {
                         put("role", "tool")
                         put("tool_call_id", id)
@@ -442,7 +450,7 @@ class ChatService(
         systemPrompt: String,
         history: List<ChatMessage>,
         newUserMessage: String,
-        tools: CoachTools,
+        tools: CoachTools?,
         imageBytes: ByteArray?,
         maxTokens: Int
     ): String {
@@ -470,7 +478,7 @@ class ChatService(
                 put("model", model)
                 put("max_tokens", maxTokens)
                 put("system", systemPrompt)
-                put("tools", toolsArr)
+                if (tools != null) put("tools", toolsArr)
                 put("messages", messages)
             }
             val raw = RetryPolicy.execute {
@@ -501,7 +509,7 @@ class ChatService(
                     val id = use.optString("id").takeIf { it.isNotEmpty() } ?: continue
                     val name = use.optString("name").takeIf { it.isNotEmpty() } ?: continue
                     val input = use.optJSONObject("input") ?: JSONObject()
-                    val result = tools.execute(name, input)
+                    val result = (tools ?: throw AiError.InvalidResponse).execute(name, input)
                     toolResults.put(JSONObject().apply {
                         put("type", "tool_result")
                         put("tool_use_id", id)
@@ -534,8 +542,9 @@ class ChatService(
         systemPrompt: String,
         history: List<ChatMessage>,
         newUserMessage: String,
-        tools: CoachTools,
-        imageBytes: ByteArray?
+        tools: CoachTools?,
+        imageBytes: ByteArray?,
+        maxTokens: Int
     ): String {
         val url = "$baseUrl/models/$model:generateContent"
         // Gemini tool schema: tools=[{functionDeclarations:[{name,description,parameters}]}]
@@ -568,7 +577,8 @@ class ChatService(
             val body = JSONObject().apply {
                 put("systemInstruction", JSONObject().put("parts", JSONArray().put(JSONObject().put("text", systemPrompt))))
                 put("contents", contents)
-                put("tools", JSONArray().put(toolsObj))
+                if (tools != null) put("tools", JSONArray().put(toolsObj))
+                put("generationConfig", JSONObject().put("maxOutputTokens", maxTokens))
             }
             val raw = RetryPolicy.execute {
                 requestClient.newCall(
@@ -590,7 +600,7 @@ class ChatService(
             for (i in 0 until parts.length()) {
                 val part = parts.optJSONObject(i) ?: continue
                 part.optJSONObject("functionCall")?.let { functionCalls.add(it) }
-                part.optString("text").takeIf { it.isNotEmpty() }?.let { texts.append(it) }
+                if (!part.optBoolean("thought", false)) part.optString("text").takeIf { it.isNotEmpty() }?.let { texts.append(it) }
             }
             if (functionCalls.isNotEmpty()) {
                 contents.put(JSONObject().apply { put("role", "model"); put("parts", parts) })
@@ -598,7 +608,7 @@ class ChatService(
                 for (call in functionCalls) {
                     val name = call.optString("name").takeIf { it.isNotEmpty() } ?: continue
                     val args = call.optJSONObject("args") ?: JSONObject()
-                    val resultStr = tools.execute(name, args)
+                    val resultStr = (tools ?: throw AiError.InvalidResponse).execute(name, args)
                     val resultObj = runCatching { JSONObject(resultStr) }.getOrNull() ?: JSONObject()
                     responseParts.put(JSONObject().apply {
                         put("functionResponse", JSONObject().apply {

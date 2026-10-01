@@ -206,12 +206,6 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-private sealed interface AddMenuDestination {
-    data class FoodGroup(val index: Int) : AddMenuDestination
-    data object Water : AddMenuDestination
-    data object Fasting : AddMenuDestination
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -249,8 +243,6 @@ DisposableEffect(lifecycleOwner, vm) {
     var savedMealsTab by remember { mutableStateOf<SavedTab?>(null) }
     var showBarcodeScanner by rememberSaveable { mutableStateOf(false) }
     var showCopyFromDay by remember { mutableStateOf(false) }
-    var showAddMenu by remember { mutableStateOf(false) }
-    var addMenuDestination by remember { mutableStateOf<AddMenuDestination?>(null) }
     var showSortMenu by remember { mutableStateOf(false) }
     var editingEntry by remember { mutableStateOf<FoodEntry?>(null) }
     var selectedFoodIds by remember { mutableStateOf<Set<UUID>>(emptySet()) }
@@ -330,8 +322,6 @@ DisposableEffect(lifecycleOwner, vm) {
     }
 
     fun performFoodLogMethod(method: FoodLogMethod) {
-        showAddMenu = false
-        addMenuDestination = null
         when (method) {
             FoodLogMethod.CAMERA -> openCamera()
             FoodLogMethod.PHOTOS -> {
@@ -365,8 +355,6 @@ DisposableEffect(lifecycleOwner, vm) {
         savedMealsTab = null
         showBarcodeScanner = false
         showCopyFromDay = false
-        showAddMenu = false
-        addMenuDestination = null
         editingEntry = null
         showNutritionDetail = false
         showCustomWaterLog = false
@@ -528,7 +516,25 @@ DisposableEffect(lifecycleOwner, vm) {
             }
             item {
                 DailyRecordActions(onCamera = { openCamera() }, onDescription = { showText = true }, onManual = { showManual = true },
-                    onMore = { addMenuDestination = null; showAddMenu = true })
+                    onReuse = ::performFoodLogMethod)
+            }
+            if (ui.waterTrackingEnabled || ui.fastingTrackingEnabled || ui.activeFast != null) {
+                item {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (ui.waterTrackingEnabled) TextButton(onClick = { showCustomWaterLog = true }) {
+                            Icon(Icons.Filled.WaterDrop, contentDescription = null)
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.water))
+                        }
+                        if (ui.fastingTrackingEnabled || ui.activeFast != null) TextButton(onClick = {
+                            if (ui.activeFast != null) editingFast = ui.activeFast else showFastingStart = true
+                        }) {
+                            Icon(Icons.Filled.Timer, contentDescription = null)
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(if (ui.activeFast != null) R.string.fasting else R.string.fasting_start))
+                        }
+                    }
+                }
             }
             if (!recordsMode) {
                 item { DailyRecommendationLink(onClick = { showRecommendation = true }) }
@@ -646,124 +652,6 @@ DisposableEffect(lifecycleOwner, vm) {
         }
 
         // Floating "+" add button — overlaid bottom-right and lifted above the docked
-        // bottom nav bar. The parent Scaffold renders content full-screen behind the
-        // bar, so the Scaffold FAB slot would sit hidden underneath it. Mirrors the iOS
-        // ContentView FAB: .overlay(alignment: .bottomTrailing) + .padding(.bottom).
-        if (!selectionMode) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .navigationBarsPadding()
-                .padding(end = 24.dp, bottom = 100.dp)
-        ) {
-            // Glass-styled, progressive add menu. Actions read in task order from
-            // top to bottom, with the most common choice first.
-            SheetGlassDropdownMenu(
-                expanded = showAddMenu,
-                onDismissRequest = {
-                    showAddMenu = false
-                    addMenuDestination = null
-                },
-                menuWidth = 238.dp
-            ) {
-                when (val destination = addMenuDestination) {
-                    null -> {
-                        var insertedFoodBlock = false
-                        @Composable
-                        fun maybeFoodBoundaryHairline() {
-                            if (insertedFoodBlock) {
-                                SheetHairline()
-                                insertedFoodBlock = false
-                            }
-                        }
-                        if (ui.activeFast == null) {
-                            val addMenuConfig = ui.addMenuConfig
-                            if (addMenuConfig.usesFlatLayout) {
-                                val methods = addMenuConfig.resolvedFlatMethods()
-                                methods.forEach { method ->
-                                    SheetGlassDropdownMenuItem(
-                                        label = stringResource(method.titleRes),
-                                        leadingIcon = method.icon
-                                    ) { performFoodLogMethod(method) }
-                                }
-                                insertedFoodBlock = methods.isNotEmpty()
-                            } else {
-                                val groups = addMenuConfig.resolvedGroups()
-                                groups.forEachIndexed { index, group ->
-                                    if (index > 0) SheetHairline()
-                                    SheetGlassDropdownMenuItem(
-                                        label = group.displayName(),
-                                        leadingIcon = group.methods.firstOrNull()?.icon ?: FoodLogMethodDefaultGroupIcon,
-                                        trailingIcon = Icons.Filled.ChevronRight
-                                    ) { addMenuDestination = AddMenuDestination.FoodGroup(index) }
-                                }
-                                insertedFoodBlock = groups.isNotEmpty()
-                            }
-                        }
-                        if (ui.waterTrackingEnabled) {
-                            maybeFoodBoundaryHairline()
-                            SheetGlassDropdownMenuItem(
-                                label = stringResource(R.string.water),
-                                leadingIcon = Icons.Filled.WaterDrop,
-                                trailingIcon = Icons.Filled.ChevronRight
-                            ) { addMenuDestination = AddMenuDestination.Water }
-                        }
-                        if (ui.fastingTrackingEnabled) {
-                            maybeFoodBoundaryHairline()
-                            if (ui.activeFast == null) {
-                                SheetGlassDropdownMenuItem(label = stringResource(R.string.fasting_start), leadingIcon = Icons.Filled.Timer) {
-                                    showAddMenu = false
-                                    showFastingStart = true
-                                }
-                            } else {
-                                SheetGlassDropdownMenuItem(
-                                    label = stringResource(R.string.fasting),
-                                    leadingIcon = Icons.Filled.Timer,
-                                    trailingIcon = Icons.Filled.ChevronRight
-                                ) { addMenuDestination = AddMenuDestination.Fasting }
-                            }
-                        }
-                    }
-
-                    is AddMenuDestination.FoodGroup -> {
-                        val group = ui.addMenuConfig.resolvedGroups().getOrNull(destination.index)
-                        group?.methods?.forEach { method ->
-                            SheetGlassDropdownMenuItem(
-                                label = stringResource(method.titleRes),
-                                leadingIcon = method.icon
-                            ) { performFoodLogMethod(method) }
-                        }
-                        SheetGlassDropdownMenuItem(
-                            label = stringResource(R.string.back),
-                            leadingIcon = Icons.Filled.ChevronLeft
-                        ) { addMenuDestination = null }
-                    }
-
-                    AddMenuDestination.Water -> {
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.water_one_glass_dynamic, ui.waterUnit.format(250)), leadingIcon = Icons.Filled.WaterDrop) { showAddMenu = false; addMenuDestination = null; vm.addWater(250) }
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.water_two_glasses_dynamic, ui.waterUnit.format(500)), leadingIcon = Icons.Filled.WaterDrop) { showAddMenu = false; addMenuDestination = null; vm.addWater(500) }
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.water_three_glasses_dynamic, ui.waterUnit.format(750)), leadingIcon = Icons.Filled.WaterDrop) { showAddMenu = false; addMenuDestination = null; vm.addWater(750) }
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.water_custom_amount), leadingIcon = Icons.Filled.DriveFileRenameOutline) { showAddMenu = false; addMenuDestination = null; showCustomWaterLog = true }
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.back), leadingIcon = Icons.Filled.ChevronLeft) { addMenuDestination = null }
-                    }
-
-                    AddMenuDestination.Fasting -> {
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.fasting_end), leadingIcon = Icons.Filled.Stop) {
-                            showAddMenu = false
-                            addMenuDestination = null
-                            vm.endFast()
-                        }
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.fasting_cancel), leadingIcon = Icons.Filled.Delete) {
-                            showAddMenu = false
-                            addMenuDestination = null
-                            vm.cancelFast()
-                        }
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.back), leadingIcon = Icons.Filled.ChevronLeft) { addMenuDestination = null }
-                    }
-                }
-            }
-        }
-        }
         }
     }
 
@@ -2956,7 +2844,7 @@ internal fun ManualEntryDialog(
     var fat by rememberSaveable { mutableStateOf("") }
     var fiber by rememberSaveable { mutableStateOf("") }
     var mealType by rememberSaveable { mutableStateOf(MealType.currentMeal) }
-    var mealMenuExpanded by remember { mutableStateOf(false) }
+
     var isSubmitting by remember { mutableStateOf(false) }
     val submissionGate = remember { FoodSubmissionGate() }
 
@@ -2989,54 +2877,8 @@ internal fun ManualEntryDialog(
                     decimal = true
                 )
 
-                // Meal Type — DropdownMenu styled to match the FoodResultSheet /
-                // EditFoodEntrySheet meal pickers (icon + label, pink, anchored
-                // to the right cluster).
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .clickable { mealMenuExpanded = true }
-                        .padding(horizontal = 14.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(R.string.sheet_meal_type), fontSize = 16.sp, modifier = Modifier.weight(1f))
-                    Box {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                sheetMealIcon(mealType),
-                                contentDescription = null,
-                                tint = AppColors.Calorie,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                stringResource(mealType.displayNameRes),
-                                fontSize = 16.sp,
-                                color = AppColors.Calorie,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        SheetGlassDropdownMenu(
-                            expanded = mealMenuExpanded,
-                            onDismissRequest = { mealMenuExpanded = false },
-                            menuWidth = 184.dp
-                        ) {
-                            for (m in MealType.values()) {
-                                SheetGlassDropdownMenuItem(
-                                    label = stringResource(m.displayNameRes),
-                                    leadingIcon = sheetMealIcon(m),
-                                    selected = m == mealType,
-                                    onClick = {
-                                        mealType = m
-                                        mealMenuExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
+                Text(stringResource(R.string.sheet_meal_type), style = MaterialTheme.typography.titleSmall)
+                MealTypeSelector(selected = mealType, onSelect = { mealType = it })
 
                 FudGlassPrimaryButton(
                     text = stringResource(R.string.action_save),

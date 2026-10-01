@@ -857,12 +857,7 @@ fun SettingsScreen(
                     stringResource(R.string.settings_meal_times_customize),
                     icon = Icons.Outlined.Bolt
                 ) { nav.navigate(FudAIRoutes.QUICK_ACTIONS) }
-                HorizontalDivider()
-                SettingRow(
-                    stringResource(R.string.settings_add_menu_title),
-                    stringResource(R.string.settings_meal_times_customize),
-                    icon = Icons.Outlined.Add
-                ) { nav.navigate(FudAIRoutes.ADD_MENU) }
+
             }
             }
 
@@ -1013,6 +1008,19 @@ fun SettingsScreen(
                         icon = Icons.Outlined.Schedule
                     ) { sheet = SettingsSheet.REQUEST_TIMEOUT }
                 }
+                HorizontalDivider()
+                ToggleRow(
+                    "思考模式",
+                    ui.thinkingModeEnabled,
+                    icon = Icons.Outlined.SmartToy,
+                    onChange = vm::setThinkingModeEnabled
+                )
+                Text(
+                    "用于支持思考的 DeepSeek、OpenAI、Gemini、Claude 和 OpenRouter 模型。开启后可能增加等待时间和费用，输出预算至少为 8192 Token；关闭后恢复常规请求。其他服务商及自定义接口暂不控制思考参数。",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 if (ui.selectedAI == AIProvider.OPENROUTER ||
                     (ui.separateTextProviderEnabled && ui.selectedTextAI == AIProvider.OPENROUTER) ||
                     (ui.fallbackEnabled && ui.fallbackProvider == AIProvider.OPENROUTER) ||
