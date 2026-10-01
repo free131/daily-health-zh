@@ -1,0 +1,28 @@
+# Local credentials and personal configuration
+**/local.properties
+**/keystore.properties
+**/oauth.properties
+**/google-services.json
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+.env
+.env.*
+!.env.example
+
+# Build output, IDE state, SDKs and generated files
+**/build/
+**/.gradle/
+**/.kotlin/
+**/.idea/
+**/.cxx/
+**/.externalNativeBuild/
+*.iml
+*.apk
+*.aab
+*.log
+__pycache__/
+.DS_Store
+Thumbs.db

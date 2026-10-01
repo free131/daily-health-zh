@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="daily_burn">估计总消耗：%1$s 千卡</string>
+    <string name="theme_color_daily_green">日常青绿</string>
+    <string name="daily_nav_today">今天</string>
+    <string name="daily_nav_records">记录</string>
+    <string name="daily_nav_trends">趋势</string>
+    <string name="daily_home_title">今天，吃得明白</string>
+    <string name="daily_records_title">饮食记录</string>
+    <string name="daily_intake">今日摄入</string>
+    <string name="daily_day_intake">当日摄入</string>
+    <string name="daily_goal">目标 %1$s 千卡</string>
+    <string name="daily_calories">%1$s 千卡</string>
+    <string name="daily_remaining">距目标 %1$s 千卡</string>
+    <string name="daily_over">超出目标 %1$s 千卡</string>
+    <string name="daily_no_goal">暂未设置热量目标</string>
+    <string name="daily_camera">拍照记录</string>
+    <string name="daily_manual">手动记录</string>
+    <string name="daily_more">更多记录方式</string>
+    <string name="daily_food_title">今日饮食与记录</string>
+    <string name="daily_all_records">全部记录</string>
+    <string name="daily_nutrition_details">营养详情</string>
+    <string name="daily_workout">今日训练</string>
+    <string name="daily_workout_empty">还没有训练记录，点此添加</string>
+    <string name="daily_workout_count">%1$d 个动作 · %2$d 组已记录</string>
+    <string name="daily_ask_coach">询问教练</string>
+</resources>

@@ -1,0 +1,21 @@
+<resources>
+    <string name="food_actions">操作</string>
+    <string name="food_favorite_remove">取消收藏</string>
+    <string name="food_favorite_save">收藏餐食</string>
+    <string name="food_log_delete">删除饮食记录</string>
+    <string name="food_log_delete_note">仅删除此条饮食记录，已收藏的餐食会保留。</string>
+    <string name="food_copy_note">将餐食复制到%1$s，原有记录会保留。</string>
+    <string name="measurement_optional_note">选填。用于计算腰臀比、腰高比、体脂率和骨架大小；主动使用目标计算或教练功能时，也可作为分析依据。</string>
+    <string name="unit_serving_count">份</string>
+    <string name="widget_remaining_value">还剩 %1$s</string>
+    <string name="widget_water_tracking">饮水记录</string>
+    <string name="widget_water_enable">在 Fud AI 中开启</string>
+    <string name="voice_transcribing">正在转写…</string>
+    <string name="delete_food_title">删除饮食记录？</string>
+    <string name="delete_water_title">删除饮水记录？</string>
+    <string name="delete_fast_title">删除断食记录？</string>
+    <string name="delete_water_note">将删除此条饮水记录。</string>
+    <string name="delete_fast_note">将删除此条已完成的断食记录。</string>
+    <string name="coach_image_default">请分析这张图片。</string>
+    <string name="export_saved_local">已保存到所选本地文件。</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="private_meal_photos">餐食照片</string>
+    <string name="private_photo_count">已选 %1$d 张，最多 10 张</string>
+    <string name="private_remove_photo">移除照片</string>
+    <string name="private_add_photos">继续选图</string>
+    <string name="private_take_more">继续拍照</string>
+    <string name="private_food_note">补充说明（选填）</string>
+    <string name="private_food_note_hint">例如：鸡肉约 180 克，米饭约 220 克，酱汁只吃了一半</string>
+    <string name="private_flash_on">闪光灯：开启</string>
+    <string name="private_flash_auto">闪光灯：自动</string>
+    <string name="private_flash_off">闪光灯：关闭</string>
+    <string name="private_delete_food">删除这条饮食记录？</string>
+    <string name="private_privacy_title">本地存储与联网范围</string>
+    <string name="private_privacy_body">饮食记录、照片和设置保存在本机。此版本已移除自动更新、云备份、排行榜、联网条码查询、在线语音识别和远程图片下载，并禁用 Android 自动备份与设备迁移。只有你手动配置并发起的 AI 图片识别、文字分析和聊天请求可以联网；启用备用模型后，失败的请求可发送给你配置的备用服务。AI 服务商会接收请求所需的照片、文字或聊天上下文。导出和分享仅在你主动操作时交给系统处理，接收文件的其他应用不受本应用控制。请自行保存本地导出文件，卸载或清除应用数据会丢失记录。</string>
+</resources>

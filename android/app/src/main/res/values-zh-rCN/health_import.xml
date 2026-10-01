@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_import_title">导入饮食历史</string>
+    <string name="health_import_action">导入</string>
+    <string name="health_import_description">从其他应用导入饮食记录。先预览，再选择一个来源应用，避免重复计算同一条记录。</string>
+    <string name="health_import_from">开始日期（年-月-日）</string>
+    <string name="health_import_to">结束日期（年-月-日）</string>
+    <string name="health_import_history_hint">未授予历史记录权限时，只能选择近 30 天。更早的记录需要设备支持并授予历史记录权限。</string>
+    <string name="health_import_grant">授予营养和历史记录权限</string>
+    <string name="health_import_access_result">权限已更新，请重新预览可导入的记录。</string>
+    <string name="health_import_access_needed">请在 Health Connect 中允许读取营养数据，然后重新预览。</string>
+    <string name="health_import_invalid_dates">请按“年-月-日”输入有效日期。结束日期不能早于开始日期，也不能晚于今天。</string>
+    <string name="health_import_history_needed">此时间范围需要历史记录权限。请在支持的设备上授权，或改选近 30 天。</string>
+    <string name="health_import_preview">预览可导入记录</string>
+    <string name="health_import_failed">未能完成导入，请检查 Health Connect 权限后重试。</string>
+    <string name="health_import_empty">此时间范围内没有其他应用提供的新饮食记录。请确认来源应用已将营养数据共享到 Health Connect。导入过的记录会跳过，包括已从本应用删除的记录。</string>
+    <string name="health_import_count">%1$d 条新记录 · %2$d 千卡</string>
+    <string name="health_import_unnamed">导入的餐食</string>
+    <string name="health_import_local_only">导入后保存为本地副本，编辑和删除只影响 Fud AI。再次导入会跳过已有记录，不会更新它们。</string>
+    <string name="health_import_done">已导入 %1$d 条饮食记录。</string>
+    <string name="health_import_close">关闭</string>
+</resources>

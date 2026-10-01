@@ -1,0 +1,21 @@
+<resources>
+    <string name="food_actions">Actions</string>
+    <string name="food_favorite_remove">Remove from Favorites</string>
+    <string name="food_favorite_save">Save to Favorites</string>
+    <string name="food_log_delete">Delete Food Log</string>
+    <string name="food_log_delete_note">This removes the food from your diary. Saved favorites are kept.</string>
+    <string name="food_copy_note">Foods will be copied to %1$s. Original entries stay unchanged.</string>
+    <string name="measurement_optional_note">Optional. These measurements help calculate body proportions and can be included when you request goal calculation or coaching.</string>
+    <string name="unit_serving_count">serving</string>
+    <string name="widget_remaining_value">%1$s left</string>
+    <string name="widget_water_tracking">Water Tracking</string>
+    <string name="widget_water_enable">Enable in Fud AI</string>
+    <string name="voice_transcribing">Transcribing…</string>
+    <string name="delete_food_title">Delete Food Log?</string>
+    <string name="delete_water_title">Delete Water Log?</string>
+    <string name="delete_fast_title">Delete Fasting Log?</string>
+    <string name="delete_water_note">This removes the water entry from your diary.</string>
+    <string name="delete_fast_note">This removes the completed fast from your diary.</string>
+    <string name="coach_image_default">Analyze this image.</string>
+    <string name="export_saved_local">Saved to the selected local file.</string>
+</resources>
